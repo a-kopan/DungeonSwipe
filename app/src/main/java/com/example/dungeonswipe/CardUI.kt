@@ -1,13 +1,16 @@
 package com.example.dungeonswipe
 
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Icon
@@ -25,28 +28,41 @@ import androidx.compose.ui.unit.dp
 import com.example.dungeonswipe.ui.theme.DungeonSwipeTheme
 
 @Composable
-fun Card(modifier: Modifier = Modifier, entity: Unit, image: Int = R.drawable.ic_money) {
-    Box(modifier = Modifier
+fun CardUI(modifier: Modifier = Modifier, CardDataClass: Card) {
+    val color : Color
+    if (CardDataClass is Hero) {
+        color = Color.Yellow
+    } else {
+        color = Color.Black
+    }
+    //UI
+    Box(modifier = modifier
         .size(100.dp, 200.dp)
         .background(
             color = Color.Gray,
             shape = RoundedCornerShape(16.dp)
         )
-        .fillMaxSize()
+        .fillMaxSize(0.5f)
+        .border(
+            BorderStroke(2.dp, color),
+            shape = RoundedCornerShape(16.dp)
+        )
     ) {
         Column(
             modifier = Modifier
                 .align(Alignment.Center)
         ) {
             ImageContainer(
-                modifier,
-                image
+                Modifier,
+                CardDataClass.getImage()
             )
-            ValueBarContainer(
-                modifier.fillMaxWidth(),
-                10,
-                painterResource(R.drawable.ic_money)
-            )
+            if (CardDataClass != Empty){
+                ValueBarContainer(
+                    Modifier.fillMaxWidth(),
+                    CardDataClass.fetchCurrentValue(),
+                    painterResource(R.drawable.hearth)
+                )
+            }
         }
     }
 }
@@ -65,7 +81,9 @@ fun ImageContainer(modifier: Modifier = Modifier, image: Int) {
 fun ValueBarContainer(modifier: Modifier = Modifier, value: Int, image: Painter) {
     val value = remember { mutableIntStateOf(value) }
     Row(
-        horizontalArrangement = Arrangement.Center) {
+        horizontalArrangement = Arrangement.Center,
+        modifier = modifier
+    ) {
         Text(
             modifier = Modifier
                 .align(Alignment.CenterVertically),
@@ -84,6 +102,9 @@ fun ValueBarContainer(modifier: Modifier = Modifier, value: Int, image: Painter)
 @Composable
 fun PlainCardPreview() {
     DungeonSwipeTheme {
-        Card(Modifier, TestEntity(8), R.drawable.lizardman)
+        Row() {
+            CardUI(Modifier.padding(horizontal = 5.dp), Hero)
+            CardUI(CardDataClass = Enemy())
+        }
     }
 }
