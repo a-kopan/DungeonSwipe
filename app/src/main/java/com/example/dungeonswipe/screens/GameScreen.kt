@@ -1,5 +1,6 @@
 package com.example.dungeonswipe.screens
 
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.gestures.detectDragGestures
 import androidx.compose.foundation.layout.*
 import com.example.dungeonswipe.R
@@ -15,6 +16,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.paint
 import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavHostController
 import com.example.dungeonswipe.*
@@ -45,39 +47,48 @@ fun GameScreen(navController: NavHostController) {
         }
     }
 
-    Column(
-        modifier = Modifier
-            .fillMaxSize()
-            .paint(painterResource(R.drawable.background))
-            .pointerInput(Unit) {
-                detectDragGestures { change, dragAmount ->
-                    change.consume()
+    Box(modifier = Modifier.fillMaxSize()) {
+        Image(
+            painter = painterResource(R.drawable.background),
+            contentDescription = "background image",
+            contentScale = ContentScale.Crop,
+            modifier = Modifier.matchParentSize()
+        )
 
-                    if (isPlayerTurn && !isWaitingForTurn) {
-                        val (dx, dy) = dragAmount
-                        val direction = when {
-                            dy < 0 && dx.absoluteValue < dy.absoluteValue -> "UP"
-                            dy > 0 && dx.absoluteValue < dy.absoluteValue -> "DOWN"
-                            dx < 0 && dy.absoluteValue < dx.absoluteValue -> "LEFT"
-                            dx > 0 && dy.absoluteValue < dx.absoluteValue -> "RIGHT"
-                            else -> null
-                        }
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .pointerInput(Unit) {
+                    detectDragGestures { change, dragAmount ->
+                        change.consume()
 
-                        direction?.let {
-                            moveHero(board, heroPosition.value, direction)?.let { newPosition ->
-                                heroPosition.value = newPosition
-                                isPlayerTurn = false
-                                isWaitingForTurn = true
+                        if (isPlayerTurn && !isWaitingForTurn) {
+                            val (dx, dy) = dragAmount
+                            val direction = when {
+                                dy < 0 && dx.absoluteValue < dy.absoluteValue -> "UP"
+                                dy > 0 && dx.absoluteValue < dy.absoluteValue -> "DOWN"
+                                dx < 0 && dy.absoluteValue < dx.absoluteValue -> "LEFT"
+                                dx > 0 && dy.absoluteValue < dx.absoluteValue -> "RIGHT"
+                                else -> null
+                            }
+
+                            direction?.let {
+                                moveHero(board, heroPosition.value, direction)?.let { newPosition ->
+                                    heroPosition.value = newPosition
+                                    isPlayerTurn = false
+                                    isWaitingForTurn = true
+                                }
                             }
                         }
                     }
-                }
-            },
-        verticalArrangement = Arrangement.SpaceBetween,
-        horizontalAlignment = Alignment.CenterHorizontally,
-    ) {
-        GameBoard(board = board, heroPosition = heroPosition.value)
+                },
+            verticalArrangement = Arrangement.SpaceBetween,
+            horizontalAlignment = Alignment.CenterHorizontally,
+        ) {
+            GameBoard(board = board, heroPosition = heroPosition.value)
+        }
     }
+
 }
 
 @Composable
@@ -130,7 +141,7 @@ fun moveHero(board: SnapshotStateList<SnapshotStateList<Card>>, heroPosition: Pa
         board[row][col] = Empty
         board[row][col].currentValue = 0
         board[newRow][newCol] = hero
-        refreshHero(board, heroPosition)
+        refreshHero(board, newRow, newCol)
 
         if (hero.currentValue <= 0) {
 
@@ -146,8 +157,8 @@ fun heroEquipWeapon(weapon: Weapon) {
 fun heroDrinkPotion(potion: Potion) {
 }
 
-fun refreshHero(board: SnapshotStateList<SnapshotStateList<Card>>, heroPosition: Pair<Int, Int>) {
-    val hero = board[heroPosition.first][heroPosition.second]
-    board[heroPosition.first].remove(hero)
-    board[heroPosition.first].add(heroPosition.second, hero)
+fun refreshHero(board: SnapshotStateList<SnapshotStateList<Card>>, row: Int, col: Int) {
+    val hero = board[row][col]
+    board[row].remove(hero)
+    board[row].add(col, hero)
 }
