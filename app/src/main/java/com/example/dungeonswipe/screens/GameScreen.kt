@@ -274,7 +274,7 @@ fun getRandomCard(): Card {
     return when {
         randomValue < 10 -> Weapon()
         randomValue < 20 -> Potion()
-        randomValue < 50 -> Enemy()
+        randomValue < 30 -> Enemy()
         else -> Empty
     }
 }
