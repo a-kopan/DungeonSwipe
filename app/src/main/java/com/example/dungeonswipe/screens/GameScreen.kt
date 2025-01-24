@@ -1,14 +1,15 @@
 package com.example.dungeonswipe.screens
 
 import androidx.compose.foundation.Image
+import androidx.compose.foundation.background
 import androidx.compose.foundation.gestures.detectDragGestures
 import androidx.compose.foundation.layout.*
+import androidx.compose.material3.Text
 import com.example.dungeonswipe.R
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.MutableState
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -16,7 +17,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.runtime.snapshots.SnapshotStateList
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.paint
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.unit.dp
@@ -24,18 +25,26 @@ import androidx.navigation.NavHostController
 import com.example.dungeonswipe.*
 import kotlin.math.absoluteValue
 import kotlinx.coroutines.delay
-import kotlin.random.Random
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.tooling.preview.Preview
-import androidx.navigation.compose.NavHost
-import androidx.navigation.compose.composable
+import androidx.compose.ui.unit.sp
 import androidx.navigation.compose.rememberNavController
 import com.example.dungeonswipe.dataClasses.*
-import com.example.dungeonswipe.ui.theme.DungeonSwipeTheme
+import kotlin.random.Random
 
 @Composable
-fun GameScreen(navController: NavHostController, hero: Hero = Hero()) {
+fun GameScreen(gameViewModel: GameViewModel, navController: NavHostController, hero: Hero = Hero()) {
     val heroState = remember { mutableStateOf(hero) }
+    var enemies = mutableListOf<Enemy>()
+    val availableBuffs = gameViewModel.purchasedBuffs.collectAsState().value
+
+    for (buff in availableBuffs) {
+        if (! heroState.value.buffs.any { it.name == buff.name } ) {
+            buff.replaceTarget(heroState.value)
+            heroState.value.addBuff(buff)
+        }
+    }
+
     val board = remember {
         mutableStateListOf(
             mutableStateListOf<Card>(Weapon(2), Weapon(5), Weapon()),
@@ -86,7 +95,10 @@ fun GameScreen(navController: NavHostController, hero: Hero = Hero()) {
                                     board,
                                     heroPosition.value,
                                     direction,
-                                    heroState.value
+                                    heroState.value,
+                                    enemies,
+                                    gameViewModel,
+                                    navController
                                 )?.let { newPosition ->
                                     heroPosition.value = newPosition
                                     isPlayerTurn = false
@@ -103,6 +115,11 @@ fun GameScreen(navController: NavHostController, hero: Hero = Hero()) {
                 modifier = Modifier.fillMaxWidth(),
                 navController = navController,
                 amountOfCash = heroState.value.currentMoney
+            )
+            BuffCounterBar(
+                Modifier
+                    .fillMaxWidth(),
+                heroState.value.buffs
             )
             GameBoard(
                 modifier = Modifier
@@ -142,7 +159,10 @@ fun moveHero(
     board: SnapshotStateList<SnapshotStateList<Card>>,
     heroPosition: Pair<Int, Int>,
     direction: String,
-    heroState: Hero
+    heroState: Hero,
+    enemies: MutableList<Enemy>,
+    gameViewModel: GameViewModel,
+    navController: NavHostController
 ): Pair<Int, Int>? {
     val (row, col) = heroPosition
     var newPosition = when (direction) {
@@ -188,18 +208,73 @@ fun moveHero(
             else -> {}
         }
 
+        if (heroState.currentValue<=0) {
+            gameViewModel.addGold(heroState.currentMoney)
+            navController.popBackStack()
+        }
+
+    }
+    for (buff in heroState.buffs) {
+        buff.timer-=1
+        if (buff.timer<=0) {
+            if (buff.specialEffectOnHero != null) {
+                buff.specialEffectOnHero?.let { it(heroState) }
+            } else if (buff.specialEffectOnEnemies != null) {
+                //Get all enemies from the board
+                for (row in board) {
+                    for (card in row) {
+                        if (card is Enemy) {
+                            enemies.add(card)
+                        }
+                    }
+                }
+                buff.specialEffectOnEnemies?.let { it(enemies) }
+                enemies.clear()
+            }
+            buff.timer = buff.max_timer
+        }
     }
 
+    //Do something with Empty cards on the map
+    replaceEmptyCardsWithRandom(board)
     return newPosition
 }
 
-
-@Preview
 @Composable
-fun PlainCardPreview() {
-    DungeonSwipeTheme {
-        val navController = rememberNavController()
+fun BuffCounterBar(modifier: Modifier = Modifier, buffs: List<Buff>) {
+    Row(
+        modifier = modifier,
+        horizontalArrangement = Arrangement.Center
+    ) {
+        for (buff in buffs) {
+            Text(
+                modifier = Modifier.padding(horizontal = 10.dp),
+                text = buff.timer.toString(),
+                color = buff.textColor,
+                fontFamily = pixelFontFamily,
+                fontSize = 35.sp
+            )
+        }
+    }
+}
 
-        GameScreen(navController)
+fun replaceEmptyCardsWithRandom(grid: List<MutableList<Card>>) {
+    for (row in grid) {
+        for (col in row.indices) {
+            if (row[col] is Empty) {
+                row[col] = getRandomCard()  // Replace Empty card with a random card
+            }
+        }
+    }
+}
+
+fun getRandomCard(): Card {
+    val randomValue = Random.nextInt(0, 100)  // Generate a random number between 0 and 100
+
+    return when {
+        randomValue < 10 -> Weapon()
+        randomValue < 20 -> Potion()
+        randomValue < 50 -> Enemy()
+        else -> Empty
     }
 }

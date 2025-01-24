@@ -94,20 +94,20 @@ fun TextBlock(modifier : Modifier = Modifier, text : String) {
     )
 }
 
-@Preview
-@Composable
-fun AboutScreenPreview() {
-    val navController = rememberNavController()
-
-    NavHost(
-        navController = navController,
-        startDestination = "about_screen"
-    ) {
-        composable("main_menu") { MainMenu(navController) }
-        composable("shop_screen") { ShopScreen(navController) }
-        composable("about_screen") { AboutScreen(navController) }
-    }
-    DungeonSwipeTheme {
-        AboutScreen(navController)
-    }
-}
+//@Preview
+//@Composable
+//fun AboutScreenPreview() {
+//    val navController = rememberNavController()
+//
+//    NavHost(
+//        navController = navController,
+//        startDestination = "about_screen"
+//    ) {
+//        composable("main_menu") { MainMenu(navController) }
+//        composable("shop_screen") { ShopScreen(navController) }
+//        composable("about_screen") { AboutScreen(navController) }
+//    }
+//    DungeonSwipeTheme {
+//        AboutScreen(navController)
+//    }
+//}

@@ -1,20 +1,23 @@
 package com.example.dungeonswipe.dataClasses
 
-import com.example.dungeonswipe.dataClasses.Enemy
 import com.example.dungeonswipe.R
-import com.example.dungeonswipe.dataClasses.Weapon
 
 data class Hero(
     override val imageResId: Int = R.drawable.hero,
     override var currentValue: Int = 7,
     val startingHealth: Int = currentValue,
     var currentWeapon: Weapon = Weapon(0),
-    var currentMoney: Int = 0
+    var currentMoney: Int = 0,
+    var buffs: List<Buff> = listOf()
 ) : Card(value = currentValue, imageResId = imageResId) {
     fun equipWeapon(weapon: Weapon) {
         if (weapon.armor > currentWeapon.armor) {
             currentWeapon = weapon
         }
+    }
+
+    fun addBuff(buff: Buff) {
+        this.buffs += buff
     }
 
     fun attackEnemy(

@@ -15,6 +15,8 @@ import androidx.compose.material3.ElevatedButton
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
@@ -32,14 +34,17 @@ import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
+import com.example.dungeonswipe.GameViewModel
 import com.example.dungeonswipe.R
 import com.example.dungeonswipe.pixelFontFamily
 import com.example.dungeonswipe.ui.theme.DungeonSwipeTheme
 import com.example.dungeonswipe.screens.*
 
 @Composable
-fun MainMenu(navController: NavHostController) {
+fun MainMenu(navController: NavHostController, gameViewModel: GameViewModel) {
     val context = LocalContext.current
+    val goldCount by gameViewModel.goldCount.collectAsState(initial = 0)
+
     Box(
         modifier = Modifier
             .fillMaxSize()
@@ -55,7 +60,8 @@ fun MainMenu(navController: NavHostController) {
         TopBar(
             modifier = Modifier
                 .align(Alignment.TopCenter),
-            navController = navController
+            navController = navController,
+            amountOfCash = goldCount
         )
 
         //Main title text
@@ -214,22 +220,22 @@ fun VersionText(modifier: Modifier = Modifier, version: String) {
         text = "version: "+version
     )
 }
-
-@Preview
-@Composable
-fun MainMenuPreview() {
-    val navController = rememberNavController()
-
-    NavHost(
-        navController = navController,
-        startDestination = "main_menu"
-    ) {
-        composable("main_menu") { MainMenu(navController) }
-        //composable("game_screen") { GameScreen(navController) }
-        composable("shop_screen") { ShopScreen(navController) }
-        composable("about_screen") { AboutScreen(navController) }
-    }
-    DungeonSwipeTheme {
-        MainMenu(navController)
-    }
-}
+//
+//@Preview
+//@Composable
+//fun MainMenuPreview() {
+//    val navController = rememberNavController()
+//
+//    NavHost(
+//        navController = navController,
+//        startDestination = "main_menu"
+//    ) {
+//        composable("main_menu") { MainMenu(navController) }
+//        //composable("game_screen") { GameScreen(navController) }
+//        composable("shop_screen") { ShopScreen(navController) }
+//        composable("about_screen") { AboutScreen(navController) }
+//    }
+//    DungeonSwipeTheme {
+//        MainMenu(navController)
+//    }
+//}
