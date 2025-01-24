@@ -16,15 +16,15 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.ui.graphics.painter.Painter
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.tooling.preview.Preview
-import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
+import com.example.dungeonswipe.dataClasses.*
 import com.example.dungeonswipe.ui.theme.DungeonSwipeTheme
 
 @Composable
@@ -35,6 +35,13 @@ fun CardUI(modifier: Modifier = Modifier, CardDataClass: Card) {
     } else {
         color = Color.Black
     }
+    val param = when (CardDataClass) {
+        is Enemy -> CardDataClass.health
+        is Weapon -> CardDataClass.armor
+        is Potion -> CardDataClass.heal
+        else -> CardDataClass.currentValue
+    }
+
     //UI
     Box(modifier = modifier
         .size(100.dp, 200.dp)
@@ -56,13 +63,32 @@ fun CardUI(modifier: Modifier = Modifier, CardDataClass: Card) {
                 Modifier,
                 CardDataClass.getImage()
             )
-            if (CardDataClass != Empty){
+            if (CardDataClass is Hero) {
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.Center,
+                )
+                {
+                    ValueBarContainer(
+                        Modifier,
+                        CardDataClass.currentValue,
+                        painterResource(R.drawable.hearth)
+                    )
+                    ValueBarContainer(
+                        Modifier,
+                        CardDataClass.currentWeapon.armor,
+                        painterResource(R.drawable.ic_sword),
+                        imageSize = 20.dp,
+                        imageTopPadding = 5.dp
+                    )
+                }
+            } else if (CardDataClass !is Empty) {
                 ValueBarContainer(
                     Modifier.fillMaxWidth(),
-                    CardDataClass.fetchCurrentValue(),
+                    param,
                     painterResource(R.drawable.hearth)
                 )
-            }
+            } else {}
         }
     }
 }
@@ -78,8 +104,7 @@ fun ImageContainer(modifier: Modifier = Modifier, image: Int) {
 }
 
 @Composable
-fun ValueBarContainer(modifier: Modifier = Modifier, value: Int, image: Painter) {
-    val value = remember { mutableIntStateOf(value) }
+fun ValueBarContainer(modifier: Modifier = Modifier, value: Int, image: Painter, imageSize: Dp = 25.dp, imageTopPadding: Dp = 0.dp) {
     Row(
         horizontalArrangement = Arrangement.Center,
         modifier = modifier
@@ -87,13 +112,14 @@ fun ValueBarContainer(modifier: Modifier = Modifier, value: Int, image: Painter)
         Text(
             modifier = Modifier
                 .align(Alignment.CenterVertically),
-            text = "${value.value}"
+            text = "${value}"
         )
         Icon(
             painter = image,
             contentDescription = "Counter for numeric value.",
             modifier = Modifier
-                .size(25.dp)
+                .size(imageSize)
+                .padding(top = imageTopPadding)
         )
     }
 }
@@ -102,9 +128,13 @@ fun ValueBarContainer(modifier: Modifier = Modifier, value: Int, image: Painter)
 @Composable
 fun PlainCardPreview() {
     DungeonSwipeTheme {
-        Row() {
-            CardUI(Modifier.padding(horizontal = 5.dp), Hero)
-            CardUI(CardDataClass = Enemy())
+        Row(modifier = Modifier.fillMaxWidth()) {
+            val mod = Modifier.padding(horizontal = 5.dp)
+            CardUI(mod, Hero())
+            CardUI(mod, CardDataClass = Enemy())
+            //CardUI(mod, CardDataClass = Empty)
+            CardUI(mod, CardDataClass = Weapon())
+            //CardUI(mod, CardDataClass = Potion())
         }
     }
 }

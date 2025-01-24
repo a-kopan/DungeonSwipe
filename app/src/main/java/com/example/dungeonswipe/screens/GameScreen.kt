@@ -6,7 +6,9 @@ import androidx.compose.foundation.layout.*
 import com.example.dungeonswipe.R
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -24,14 +26,21 @@ import kotlin.math.absoluteValue
 import kotlinx.coroutines.delay
 import kotlin.random.Random
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.tooling.preview.Preview
+import androidx.navigation.compose.NavHost
+import androidx.navigation.compose.composable
+import androidx.navigation.compose.rememberNavController
+import com.example.dungeonswipe.dataClasses.*
+import com.example.dungeonswipe.ui.theme.DungeonSwipeTheme
 
 @Composable
-fun GameScreen(navController: NavHostController) {
+fun GameScreen(navController: NavHostController, hero: Hero = Hero()) {
+    val heroState = remember { mutableStateOf(hero) }
     val board = remember {
         mutableStateListOf(
-            mutableStateListOf<Card>(Empty, Empty, Weapon()),
-            mutableStateListOf<Card>(Empty, Hero, Enemy()),
-            mutableStateListOf<Card>(Empty, Potion(), Enemy())
+            mutableStateListOf<Card>(Weapon(2), Weapon(5), Weapon()),
+            mutableStateListOf<Card>(zombie(), Hero(), zombie()),
+            mutableStateListOf<Card>(skeleton(), Potion(), Enemy())
         )
     }
 
@@ -73,7 +82,12 @@ fun GameScreen(navController: NavHostController) {
                             }
 
                             direction?.let {
-                                moveHero(board, heroPosition.value, direction)?.let { newPosition ->
+                                moveHero(
+                                    board,
+                                    heroPosition.value,
+                                    direction,
+                                    heroState.value
+                                )?.let { newPosition ->
                                     heroPosition.value = newPosition
                                     isPlayerTurn = false
                                     isWaitingForTurn = true
@@ -85,25 +99,38 @@ fun GameScreen(navController: NavHostController) {
             verticalArrangement = Arrangement.SpaceBetween,
             horizontalAlignment = Alignment.CenterHorizontally,
         ) {
-            GameBoard(board = board, heroPosition = heroPosition.value)
+            TopBar(
+                modifier = Modifier.fillMaxWidth(),
+                navController = navController,
+                amountOfCash = heroState.value.currentMoney
+            )
+            GameBoard(
+                modifier = Modifier
+                    .fillMaxSize(),
+                board = board,
+                heroPosition = heroPosition.value,
+                heroState = heroState.value
+            )
         }
     }
 
 }
 
 @Composable
-fun GameBoard(board: List<List<Card>>, heroPosition: Pair<Int, Int>) {
+fun GameBoard(modifier: Modifier = Modifier, board: List<List<Card>>, heroPosition: Pair<Int, Int>, heroState: Hero) {
     Column(
-        modifier = Modifier.padding(top = 100.dp)
+        modifier = modifier,
+        verticalArrangement = Arrangement.Center,
+        horizontalAlignment = Alignment.CenterHorizontally
     ) {
         for (rowIndex in board.indices) {
             Row {
                 for (colIndex in board[rowIndex].indices) {
                     val card = board[rowIndex][colIndex]
                     if (rowIndex == heroPosition.first && colIndex == heroPosition.second) {
-                        CardUI(modifier = Modifier.padding(4.dp), CardDataClass = Hero)
+                        CardUI(modifier = Modifier.padding(8.dp), CardDataClass = heroState)
                     } else {
-                        CardUI(modifier = Modifier.padding(4.dp), CardDataClass = card)
+                        CardUI(modifier = Modifier.padding(8.dp), CardDataClass = card)
                     }
                 }
             }
@@ -111,9 +138,14 @@ fun GameBoard(board: List<List<Card>>, heroPosition: Pair<Int, Int>) {
     }
 }
 
-fun moveHero(board: SnapshotStateList<SnapshotStateList<Card>>, heroPosition: Pair<Int, Int>, direction: String): Pair<Int, Int>? {
+fun moveHero(
+    board: SnapshotStateList<SnapshotStateList<Card>>,
+    heroPosition: Pair<Int, Int>,
+    direction: String,
+    heroState: Hero
+): Pair<Int, Int>? {
     val (row, col) = heroPosition
-    val newPosition = when (direction) {
+    var newPosition = when (direction) {
         "UP" -> if (row > 0) Pair(row - 1, col) else null
         "DOWN" -> if (row < board.size - 1) Pair(row + 1, col) else null
         "LEFT" -> if (col > 0) Pair(row, col - 1) else null
@@ -123,42 +155,51 @@ fun moveHero(board: SnapshotStateList<SnapshotStateList<Card>>, heroPosition: Pa
 
     newPosition?.let { (newRow, newCol) ->
         val targetTile = board[newRow][newCol]
-        val hero = board[heroPosition.first][heroPosition.second]
+
         when (targetTile) {
             is Enemy -> {
-                targetTile.attackHero(hero)
+                heroState.attackEnemy(targetTile)
+                if (targetTile.health==0) {
+                    //If enemy has no onDeathEffect then just replace him with empty cell
+                    if (targetTile.onDeathEffect == null) {
+                        board[newRow][newCol] = Empty
+                    } else {
+                        targetTile.onDeathEffect?.let { it() }
+                    }
+
+                }
+                newPosition = Pair(row,col)
             }
             is Weapon -> {
-                heroEquipWeapon(targetTile)
+                heroState.equipWeapon(targetTile)
+                board[row][col] = Empty
+                board[newRow][newCol] = heroState
+            }
+            is Potion -> {
+                targetTile.healHero(heroState)
+                board[row][col] = Empty
+                board[newRow][newCol] = heroState
             }
             is Hero -> {}
-            is Potion -> {
-                heroDrinkPotion(targetTile)
+            is Empty -> {
+                board[row][col] = Empty
+                board[newRow][newCol] = heroState
             }
-            else -> {
-            }
+            else -> {}
         }
-        board[row][col] = Empty
-        board[row][col].currentValue = 0
-        board[newRow][newCol] = hero
-        refreshHero(board, newRow, newCol)
 
-        if (hero.currentValue <= 0) {
-
-        }
     }
 
     return newPosition
 }
 
-fun heroEquipWeapon(weapon: Weapon) {
-}
 
-fun heroDrinkPotion(potion: Potion) {
-}
+@Preview
+@Composable
+fun PlainCardPreview() {
+    DungeonSwipeTheme {
+        val navController = rememberNavController()
 
-fun refreshHero(board: SnapshotStateList<SnapshotStateList<Card>>, row: Int, col: Int) {
-    val hero = board[row][col]
-    board[row].remove(hero)
-    board[row].add(col, hero)
+        GameScreen(navController)
+    }
 }

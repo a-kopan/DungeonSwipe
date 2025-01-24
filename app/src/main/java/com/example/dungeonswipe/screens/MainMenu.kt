@@ -17,9 +17,14 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.Shadow
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.text.TextStyle
+import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -35,12 +40,17 @@ import com.example.dungeonswipe.screens.*
 @Composable
 fun MainMenu(navController: NavHostController) {
     val context = LocalContext.current
-
     Box(
         modifier = Modifier
             .fillMaxSize()
             .background(Color.Gray)
     ) {
+        Image(
+            painter = painterResource(R.drawable.background),
+            contentDescription = "background image",
+            contentScale = ContentScale.Crop,
+            modifier = Modifier.matchParentSize()
+        )
         //Bar at the top with money
         TopBar(
             modifier = Modifier
@@ -60,7 +70,7 @@ fun MainMenu(navController: NavHostController) {
             modifier = Modifier
                 .fillMaxHeight(1f)
                 .fillMaxWidth()
-                .padding(),
+                .padding(top = 140.dp),
             verticalArrangement = Arrangement.Center,
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
@@ -74,7 +84,8 @@ fun MainMenu(navController: NavHostController) {
         VersionText(
             modifier =Modifier
                 .fillMaxWidth()
-                .align(Alignment.BottomCenter),
+                .align(Alignment.BottomCenter)
+                .padding(horizontal = 5.dp),
             version = "0.0.1")
     }
 }
@@ -109,10 +120,16 @@ fun TopBar(modifier: Modifier = Modifier, amountOfCash: Int = 0, navController: 
     ) {
         Image(
             painter = painterResource(R.drawable.ic_money),
-            modifier = Modifier.size(20.dp),
+            modifier = Modifier.size(40.dp),
             contentDescription = "Money amount icon"
         )
-        Text(text = amountOfCash.toString())
+        Text(
+            text = amountOfCash.toString(),
+            style = TextStyle (
+                fontSize = 28.sp,
+                color = Color(0xFFFFD700)
+            )
+        )
         Box(modifier = Modifier.fillMaxWidth(), contentAlignment = Alignment.CenterEnd) {
             HomeButton(
                 modifier = Modifier.padding(horizontal = 10.dp),
@@ -125,16 +142,25 @@ fun TopBar(modifier: Modifier = Modifier, amountOfCash: Int = 0, navController: 
 fun TitleFormat(modifier: Modifier = Modifier, text: String) {
     Text(
         modifier = modifier,
-        fontSize = 40.sp,
+        fontFamily = pixelFontFamily,
+        fontSize = 60.sp,
         text = text,
+        style = TextStyle(
+            color = Color.White,
+            fontSize = 16.sp,
+            shadow = Shadow(
+                color = Color.Black,
+                offset = Offset(2f,2f),
+                blurRadius = 1f
+            )
+        ),
     )
 }
 
 @Composable
 fun TitleText(modifier: Modifier = Modifier) {
     Column(
-        modifier = modifier
-            .background(color = Color.Green),
+        modifier = modifier,
         horizontalAlignment = Alignment.CenterHorizontally
 
     ) {
@@ -152,7 +178,6 @@ fun MenuButton(
     ) {
     ElevatedButton(
         modifier = Modifier
-            .background(color = Color.Yellow)
             .padding(vertical = 30.dp)
             .size(width = 240.dp, height = 90.dp)
             .fillMaxWidth(),
@@ -175,8 +200,17 @@ fun MenuButton(
 fun VersionText(modifier: Modifier = Modifier, version: String) {
     Text(
         modifier = modifier
-            .background(Color.Blue)
             .padding(vertical = 10.dp),
+        style = TextStyle(
+            color = Color.White,
+            fontSize = 16.sp,
+            shadow = Shadow(
+                color = Color.Black,
+                offset = Offset(2f,2f),
+                blurRadius = 1f
+            )
+        ),
+        fontFamily = pixelFontFamily,
         text = "version: "+version
     )
 }
