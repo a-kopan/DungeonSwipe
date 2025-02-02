@@ -105,6 +105,8 @@ fun GameScreen(gameViewModel: GameViewModel, navController: NavHostController, h
                                     isWaitingForTurn = true
                                 }
                             }
+                            //Do something with Empty cards on the map
+                            replaceEmptyCardsWithRandom(board)
                         }
                     }
                 },
@@ -186,7 +188,6 @@ fun moveHero(
                     } else {
                         targetTile.onDeathEffect?.let { it() }
                     }
-
                 }
                 newPosition = Pair(row,col)
             }
@@ -235,8 +236,7 @@ fun moveHero(
         }
     }
 
-    //Do something with Empty cards on the map
-    replaceEmptyCardsWithRandom(board)
+
     return newPosition
 }
 

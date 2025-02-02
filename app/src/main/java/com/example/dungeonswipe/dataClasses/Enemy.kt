@@ -19,18 +19,18 @@ fun becomeSkeleton(enemy: Enemy) {
 
 
 //Monster declarations
-fun zombie(): Enemy {
+fun zombie(health: Int = 4): Enemy {
     var zombie = Enemy(
-        health = 4,
+        health = health,
         imageResId = R.drawable.zombie_copy
     )
     zombie.onDeathEffect = { becomeSkeleton(zombie) }
     return zombie
 }
 
-fun skeleton(): Enemy {
+fun skeleton(health: Int = 2): Enemy {
     return Enemy(
-        health = 5,
+        health = health,
         imageResId = R.drawable.skeleton
     )
 }

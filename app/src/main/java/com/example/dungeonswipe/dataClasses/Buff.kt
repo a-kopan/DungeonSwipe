@@ -22,7 +22,7 @@ class Buff(
 fun buffHealing(hero: Hero): Buff {
     var buff = Buff(
         name = "Healing",
-        max_timer = 7,
+        max_timer = 3,
         textColor = Color.Red,
         buffPrice = 2,
         buffDescription = "After the counter reaches 0, heal the hero with 2 hp!",
