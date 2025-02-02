@@ -34,7 +34,7 @@ fun buffHealing(hero: Hero): Buff {
 
 fun buffWeapon(hero: Hero): Buff {
     var buff = Buff(
-        name = "Healing",
+        name = "Weapon",
         max_timer = 7,
         textColor = Color.Black,
         buffPrice = 2,
